@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bariklana — Belanja Online</title>
+<meta name="theme-color" content="#E31E24">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--green:#E31E24;--green2:#C8102E;--ink:#252525;--muted:#687078;--line:#F0DCDD;--bg:#FFF7F7;--white:#fff;--red:#C8102E}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px/1.45 Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:11px 15px;background:var(--green);color:white;font-weight:700}button.secondary{background:#FDEBEC;color:var(--green)}button.danger{background:#fff0f0;color:var(--red)}button:disabled{opacity:.5;cursor:not-allowed}.wrap{max-width:1180px;margin:auto;padding:0 18px}.top{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}.topin{height:68px;display:flex;align-items:center;gap:18px}.brand{display:flex;align-items:center;gap:9px;font-size:23px;font-weight:900;color:var(--green);letter-spacing:-1px;white-space:nowrap}.brandmark{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(145deg,#C8102E,#A90F1D);box-shadow:0 4px 10px #E31E2433}.brandmark svg{width:25px;height:25px}.search{flex:1;display:flex;background:#FFF1F1;border-radius:12px;padding:0 12px;align-items:center}.search input{border:0;background:transparent;outline:0;padding:13px;width:100%}.nav{display:flex;gap:8px}.hero{margin:22px 0;background:linear-gradient(110deg,#A90F1D,#EF4444);color:white;border-radius:20px;padding:30px;min-height:150px;display:flex;align-items:center;justify-content:space-between;overflow:hidden}.hero h1{font-size:clamp(24px,4vw,38px);margin:0 0 8px;line-height:1.1}.hero p{margin:0;opacity:.9}.hero .tag{font-size:54px}
+.promo-wrap{margin:18px 0 20px;position:relative}
+.promo-slider{position:relative;overflow:hidden;border-radius:18px;box-shadow:0 8px 24px #123b7a18}
+.promo-track{display:flex;transition:transform .65s cubic-bezier(.22,.75,.25,1);will-change:transform}
+.promo-slide{flex:0 0 100%;height:190px;background:#eaf2ff;position:relative;overflow:hidden}
+.promo-slide:after{display:none}
+.promo-slide img{width:100%;height:100%;display:block;object-fit:cover}
+.promo-empty{width:100%;height:100%;display:grid;place-items:center;background:#eaf2ff;color:#8aa0bf;font-weight:700}
+.promo-dots{display:flex;justify-content:center;gap:7px;margin-top:10px}
+.promo-dot{width:7px;height:7px;padding:0;border-radius:50%;background:#b8c9e6;min-width:7px}
+.promo-dot.active{width:22px;border-radius:8px;background:#E31E24}
+@media(max-width:760px){.promo-slide{height:145px}}
+/* Tampilan pengguna: latar biru lembut bertekstur, terpisah dari area Admin */
+#homeView{position:relative;isolation:isolate;margin:0 -18px;padding:1px 18px 24px;border-radius:0 0 26px 26px;background:radial-gradient(ellipse at 8% 18%,rgba(248,113,113,.16),transparent 34%),radial-gradient(ellipse at 92% 42%,rgba(220,38,38,.10),transparent 30%),linear-gradient(145deg,#fff1f1 0%,#fffafa 48%,#ffe9e9 100%)}
+#homeView:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.34;background-image:radial-gradient(#e8a0a4 0.7px,transparent .7px);background-size:19px 19px;mask-image:linear-gradient(to bottom,black,transparent 82%)}
+#homeView .section{position:relative;margin:22px 0 0}
+#homeView .sectionhead{padding:0 2px}
+#homeView .sectionhead h2{color:#8e1720;letter-spacing:-.35px}
+#homeView .product{border:1px solid #f4d5d7;border-radius:17px;box-shadow:0 5px 18px rgba(160,20,30,.06);transition:transform .2s ease,box-shadow .2s ease}
+#homeView .product:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(160,20,30,.12)}
+#homeView .product img{background:linear-gradient(135deg,#e5efff,#f5f8ff)}
+#homeView .empty{background:rgba(255,255,255,.84);border-color:#c9daf2}
+.section{margin:24px 0}.sectionhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.sectionhead h2{font-size:20px;margin:0}.muted{color:var(--muted)}.stores,.products{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.store,.product,.panel{background:white;border:1px solid var(--line);border-radius:15px;overflow:hidden}.store{padding:14px;display:flex;gap:12px;align-items:center;text-align:left;color:inherit}.store img{width:54px;height:54px;border-radius:12px;object-fit:cover;background:#FFF0F0}.store strong{display:block}.store small{color:var(--muted)}.product{position:relative}.pin-badge{display:inline-flex;align-items:center;gap:4px;background:#fff2cf;color:#8a5700;border:1px solid #f6d98b;border-radius:20px;padding:4px 8px;font-size:10px;font-weight:800;margin-bottom:7px}.product img{width:100%;aspect-ratio:1/1;object-fit:cover;background:#FFF0F0}.pbody{padding:12px}.pname{font-weight:700;min-height:40px}.price{font-size:17px;font-weight:900;color:var(--green);margin:6px 0}.stock{font-size:12px;color:var(--muted)}.pactions{display:flex;gap:7px;margin-top:10px}.pactions button{flex:1;padding:9px 7px}.empty{padding:30px;text-align:center;color:var(--muted);background:white;border:1px dashed #CBD8EA;border-radius:14px}.hidden{display:none!important}.back{margin:18px 0}.cartbar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#15251c;color:white;border-radius:16px;padding:10px 14px;display:flex;gap:18px;align-items:center;box-shadow:0 8px 30px #102b1c44;z-index:8;min-width:min(92vw,420px);justify-content:space-between}.cartbar button{background:#2563EB}.modal{position:fixed;inset:0;background:#10201688;z-index:20;display:flex;align-items:center;justify-content:center;padding:15px}.dialog{width:min(620px,100%);max-height:90vh;overflow:auto;background:white;border-radius:18px;padding:20px}.dialog h2{margin:0 0 15px}.field{display:grid;gap:5px;margin:10px 0}.field label{font-weight:700;font-size:13px}.field input,.field textarea,.field select{width:100%;padding:11px;border:1px solid #D9E4F2;border-radius:9px;outline-color:var(--green)}.row{display:flex;gap:10px}.row>*{flex:1}.close{float:right;background:#FFF0F0;color:#25352b;padding:7px 11px}.adminlayout{display:grid;grid-template-columns:205px 1fr;gap:16px}.side{background:#fff;border:1px solid var(--line);border-radius:15px;padding:12px;height:max-content}.side button{width:100%;text-align:left;margin:3px 0;background:transparent;color:#34443a}.side button.active{background:#FCE4E5;color:var(--green)}.panel{padding:18px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:15px}.stat{background:#FFF1F1;border-radius:12px;padding:14px}.stat b{font-size:23px;display:block}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:580px}th,td{text-align:left;padding:11px;border-bottom:1px solid var(--line)}th{font-size:12px;color:var(--muted)}.adminhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.adminhead h2{margin:0}.footer{text-align:center;color:var(--muted);padding:35px 10px 90px}.notice{padding:12px;border-radius:10px;background:#fff8e8;color:#725414;margin:12px 0;font-size:13px}
+@media(max-width:760px){#homeView{margin:0 -18px;padding:1px 12px 22px;border-radius:0 0 20px 20px}#homeView .section{margin-top:18px}.topin{height:auto;min-height:60px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px;gap:10px}.brand{font-size:20px}.search{order:3;flex-basis:100%}.nav{margin-left:auto}.nav button{padding:9px}.stores,.products{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.hero{padding:22px;margin:14px 0}.hero .tag{font-size:38px}.adminlayout{grid-template-columns:1fr}.side{display:flex;overflow:auto}.side button{white-space:nowrap;width:auto}.stats{grid-template-columns:repeat(2,1fr)}.pbody{padding:10px}.pname{font-size:13px}.sectionhead h2{font-size:18px}}
+.status-pill{display:inline-flex;align-items:center;padding:6px 11px;border-radius:999px;background:#eef2f7;color:#334155;font-size:12px;font-weight:700;letter-spacing:.2px}
+.adminhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.category-chips{display:flex;gap:9px;flex-wrap:wrap}.category-chip{background:#fff;color:#B5121B;border:1px solid #F0BFC2;border-radius:999px;padding:9px 15px;font-weight:800}.category-chip.active,.category-chip:hover{background:#E31E24;color:#fff;border-color:#E31E24}.recommend-card{border:1px solid #f2c9cb;border-radius:15px;background:#fff7f7;padding:10px}.recommend-card .product{height:100%}</style>
+</head>
+<body>
+<header class="top"><div class="wrap topin"><div class="brand" onclick="goHome()"><span class="brandmark" id="storeLogoMark" aria-label="Logo toko"><svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 10.5 16 5l11 5.5v13L16 29 5 23.5v-13Z" stroke="white" stroke-width="2" stroke-linejoin="round"/><path d="M5.5 11 16 16.5 26.5 11M16 16.5V28" stroke="white" stroke-width="2" stroke-linejoin="round"/><path d="m11 8 11 5.5" stroke="#F7C85A" stroke-width="2.5" stroke-linecap="round"/></svg></span><span>Bariklana<span style="color:#f4a62a">.</span></span></div><div class="search"><span>⌕</span><input id="search" placeholder="Cari produk atau toko..." oninput="render()"></div><div class="nav"><button class="secondary" onclick="openCart()">Keranjang <span id="cartCount">0</span></button><button onclick="showAdmin()">Admin</button></div></div></header>
+<main class="wrap">
+<section id="homeView">
+<div class="promo-wrap" aria-label="Banner promo">
+ <div class="promo-slider" id="promoSlider"><div class="promo-track" id="promoTrack">
+  <article class="promo-slide"><div class="promo-copy"><span class="promo-kicker">PROMO SPESIAL BARIKLANA</span><h2>Belanja Hemat Setiap Hari!</h2><p>Temukan kebutuhan pilihan dengan harga bersahabat.</p></div><div class="promo-art">🛍️</div></article>
+  <article class="promo-slide"><div class="promo-copy"><span class="promo-kicker">BELANJA LEBIH PRAKTIS</span><h2>Pilih Produk, Pesan via WhatsApp</h2><p>Checkout mudah dan langsung terhubung ke toko.</p></div><div class="promo-art">💬</div></article>
+  <article class="promo-slide"><div class="promo-copy"><span class="promo-kicker">PENAWARAN MENARIK</span><h2>Produk Favorit Ada di Sini</h2><p>Cek katalog Bariklana dan temukan pilihanmu.</p></div><div class="promo-art">🎁</div></article>
+ </div></div>
+ <div class="promo-dots" id="promoDots"><button class="promo-dot active" aria-label="Promo 1" onclick="showPromo(0)"></button><button class="promo-dot" aria-label="Promo 2" onclick="showPromo(1)"></button><button class="promo-dot" aria-label="Promo 3" onclick="showPromo(2)"></button></div>
+</div>
+<div class="section" id="categorySection"><div class="sectionhead"><h2>Kategori Produk</h2><span class="muted" style="font-size:12px">Pilih untuk melihat produk</span></div><div id="categoryChips" class="category-chips"></div></div>
+<div class="section" id="recommendSection"><div class="sectionhead"><h2>Rekomendasi</h2><span class="muted" style="font-size:12px">Pilihan terbaik toko</span></div><div id="recommendations" class="products"></div></div>
+<div class="section"><div class="sectionhead"><h2 id="productHeading">Produk Pilihan</h2><button class="secondary" id="clearCategory" onclick="selectCategory('')" style="padding:7px 10px">Semua</button></div><div class="products" id="products"></div></div>
+</section>
+<section id="adminView" class="hidden">
+<div class="back"><button class="secondary" onclick="goHome()">← Kembali ke katalog</button></div>
+<div id="adminLogin" class="panel" style="max-width:430px;margin:30px auto;padding:22px"><div style="text-align:center;font-size:34px">🔐</div><h2 style="text-align:center">Login Admin</h2><p class="muted" style="text-align:center">Masuk menggunakan email dan kata sandi akun Admin yang sudah didaftarkan di Supabase. Link katalog tetap aman dibagikan kepada pelanggan.</p><div class="field"><label>Email Admin</label><input id="loginEmail" type="email" autocomplete="username" placeholder="email-admin@contoh.com"></div><div class="field"><label>Kata Sandi</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Kata sandi Admin" onkeydown="if(event.key==='Enter')login()"></div><button style="width:100%" onclick="login()">Masuk Admin</button><p class="muted" id="loginMsg" style="text-align:center" aria-live="polite"></p></div>
+<div id="adminApp" class="hidden"><div class="adminhead" style="margin:12px 0"><div><h2>Panel Admin Bariklana</h2><span class="muted">Semua pengaturan dalam satu halaman</span></div><button class="danger" onclick="logout()">Keluar</button></div><div class="panel" id="adminContent"></div></div>
+</section>
+</main>
+<div class="footer">© 2026 Bariklana · Belanja praktis, checkout via WhatsApp.</div>
+<div id="cartFloat" class="cartbar hidden"><span><b id="floatCount">0</b> barang · <b id="floatTotal">Rp0</b></span><button onclick="openCart()">Lihat Keranjang</button></div>
+<div id="modal" class="modal hidden" onclick="if(event.target===this)closeModal()"><div class="dialog"><button class="close" onclick="closeModal()">✕</button><div id="modalContent"></div></div></div>
+<script>
+// KONFIGURASI SUPABASE: isi satu kali sebelum upload ke GitHub Pages.\n// Keamanan Admin memakai Supabase Auth + tabel admin_users + RLS. Jangan gunakan service_role key.
+// Ambil Project URL dan anon/publishable key dari Supabase > Settings > API.
+// JANGAN gunakan service_role key di aplikasi frontend.
+const SUPABASE_URL="https://kdzohnnitdajvmuoxsbr.supabase.co";
+const SUPABASE_ANON_KEY="sb_publishable_28-lTLozR-vfgGTzG6PULw_1dqa0dxn";
+const BANNER_KEY="bariklana_banners_v2";
+let db=null,session=null,stores=[],products=[],orders=[],cart=[],categories=[],selectedCategory="",activeAdminTab="dashboard";
+let banners=[];
+const money=n=>"Rp"+Number(n||0).toLocaleString("id-ID");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const img=(url)=>url||"";
+const readBanners=()=>{try{return JSON.parse(localStorage.getItem(BANNER_KEY)||"[]")}catch{return[]}};
+const saveBanners=()=>localStorage.setItem(BANNER_KEY,JSON.stringify(banners));
+const isLoggedIn=()=>!!(session && session.user && session.isAdmin===true);
+function getSupabaseConfig(){
+ const url=String(SUPABASE_URL||"").trim().replace(/\/$/,"");
+ const key=String(SUPABASE_ANON_KEY||"").trim();
+ if(/^https:\/\/[^\s]+\.supabase\.co$/.test(url) && key && !url.includes("MASUKKAN_") && !key.includes("MASUKKAN_")) return {url,key};
+ return null;
+}
+function configured(){return !!getSupabaseConfig()}
+function setSupabaseClient(){
+ const c=getSupabaseConfig();
+ if(!c){db=null;return false}
+ db=window.supabase.createClient(c.url,c.key);
+ return true;
+}
+
+
+function fileToJpeg(file,maxSide=1000,quality=.78){
+ return new Promise((resolve,reject)=>{
+  if(!file){resolve("");return}
+  const name=String(file.name||"").toLowerCase();
+  const type=String(file.type||"").toLowerCase();
+  const isJpg=(type==="image/jpeg"||type==="image/jpg"||/\.jpe?g$/i.test(name));
+  if(!isJpg){reject(new Error("File harus JPG/JPEG. Pilih foto dengan ekstensi .jpg atau .jpeg."));return}
+  const reader=new FileReader();
+  reader.onload=e=>{
+   const im=new Image();
+   im.onload=()=>{
+    const scale=Math.min(1,maxSide/Math.max(im.naturalWidth||im.width,im.naturalHeight||im.height));
+    const c=document.createElement("canvas");
+    c.width=Math.max(1,Math.round(im.width*scale));
+    c.height=Math.max(1,Math.round(im.height*scale));
+    const ctx=c.getContext("2d");
+    if(!ctx){reject(new Error("Browser tidak dapat memproses gambar."));return}
+    ctx.drawImage(im,0,0,c.width,c.height);
+    const data=c.toDataURL("image/jpeg",quality);
+    if(!data||!data.startsWith("data:image/jpeg;base64,")){reject(new Error("Gambar JPG gagal diproses."));return}
+    resolve(data);
+   };
+   im.onerror=()=>reject(new Error("Gambar JPG/JPEG tidak dapat dibaca. Pastikan file benar-benar JPG/JPEG."));
+   im.src=e.target.result;
+  };
+  reader.onerror=()=>reject(new Error("Gagal membaca file gambar."));
+  reader.readAsDataURL(file);
+ });
+}
+function renderBanners(){
+ const track=document.getElementById("promoTrack"),dots=document.getElementById("promoDots");
+ if(!track||!dots)return;
+ const list=banners.filter(Boolean);
+ track.innerHTML=list.map((b,i)=>`<article class="promo-slide"><img src="${b}" alt="Banner ${i+1}"></article>`).join("")||`<article class="promo-slide"><div class="promo-empty"></div></article>`;
+ dots.innerHTML=list.length>1?list.map((_,i)=>`<button class="promo-dot ${i===0?"active":""}" aria-label="Banner ${i+1}" onclick="showPromo(${i})"></button>`).join(""):"";
+ promoIndex=0;showPromo(0);
+}
+
+let promoIndex=0,promoTimer=null;
+function showPromo(index){
+ const track=document.getElementById("promoTrack");if(!track)return;
+ const slides=track.children.length;if(!slides)return;
+ promoIndex=(index+slides)%slides;track.style.transform=`translateX(-${promoIndex*100}%)`;
+ document.querySelectorAll(".promo-dot").forEach((dot,i)=>dot.classList.toggle("active",i===promoIndex));
+}
+function startPromoSlider(){
+ if(promoTimer)clearInterval(promoTimer);
+ if(!document.getElementById("promoTrack"))return;
+ promoTimer=setInterval(()=>showPromo(promoIndex+1),3000);
+}
+async function init(){
+ banners=readBanners();
+ if(configured()){
+  setSupabaseClient();
+  await loadData();
+  const authResult=await db.auth.getSession();
+  const authSession=authResult?.data?.session||null;
+  if(authSession) await validateAdminSession(authSession);
+ }else{
+  demoData();
+ }
+ render();updateAdminAuth();renderBanners();startPromoSlider();
+}
+function demoData(){categories=[{id:"c1",name:"Sembako",is_recommended:true},{id:"c2",name:"Minuman",is_recommended:false}];stores=[{id:"demo1",name:"Bariklana Mart",address:"Alamat toko dapat diatur admin",whatsapp:"081217649207",image_url:"",description:"Belanja kebutuhan harian"}];products=[{id:"p1",store_id:"demo1",name:"Beras Premium 5 Kg",price:75000,stock:20,image_url:"",category:"Sembako",is_featured:true},{id:"p2",store_id:"demo1",name:"Minyak Goreng 1 L",price:18000,stock:35,image_url:"",category:"Sembako"},{id:"p3",store_id:"demo1",name:"Gula Pasir 1 Kg",price:17000,stock:18,image_url:"",category:"Sembako"},{id:"p4",store_id:"demo1",name:"Air Mineral 600 ml",price:4000,stock:50,image_url:"",category:"Minuman"}]}
+async function loadData(){
+ if(!db) return {ok:false,error:{message:"Supabase belum dikonfigurasi. Isi Project URL dan anon/publishable key di konfigurasi index.html."}};
+ const [s,p,c,b]=await Promise.all([
+  db.from("stores").select("*").eq("is_active",true).order("created_at",{ascending:false}),
+  db.from("products").select("*").eq("is_active",true).order("created_at",{ascending:false}),
+  db.from("categories").select("*").eq("is_active",true).order("name",{ascending:true}),
+  db.from("banners").select("slot,image_url").order("slot",{ascending:true})
+ ]);
+ if(s.error) return {ok:false,error:s.error};
+ if(p.error) return {ok:false,error:p.error};
+ if(c.error) return {ok:false,error:c.error};
+ stores=s.data||[];
+ products=p.data||[];
+ categories=c.data||[];
+ if(!b.error){
+  const shared=(b.data||[]).filter(x=>x.image_url).map(x=>x.image_url);
+  // Import banner lama dari browser admin hanya jika tabel bersama masih kosong.
+  if(shared.length){
+   banners=shared;
+   saveBanners();
+  }else{
+   const legacy=readBanners().filter(Boolean);
+   if(legacy.length){
+    const rows=legacy.slice(0,3).map((image_url,i)=>({slot:i+1,image_url}));
+    const migrated=await db.from("banners").upsert(rows,{onConflict:"slot"});
+    if(!migrated.error){banners=legacy.slice(0,3);saveBanners();}
+    else {console.warn("Migrasi banner lama gagal:",migrated.error);banners=legacy.slice(0,3);}
+   }else{banners=[];saveBanners();}
+  }
+ }else{
+  // Katalog dan produk tetap dapat dibuka jika SQL tabel banner belum dijalankan.
+  console.warn("Tabel banners belum tersedia. Jalankan supabase.sql terbaru:",b.error);
+  banners=readBanners();
+ }
+ return {ok:true};
+}
+function syncStoreLogo(){
+ const mark=document.getElementById("storeLogoMark");
+ if(!mark)return;
+ const logo=stores.find(s=>s.image_url)?.image_url||"";
+ if(logo){
+  mark.innerHTML=`<img src="${esc(logo)}" alt="Logo toko" style="width:100%;height:100%;object-fit:contain;border-radius:12px;background:#fff" onerror="this.remove()">`;
+  mark.style.background="#fff";
+ }else{
+  mark.style.background="linear-gradient(145deg,#C8102E,#A90F1D)";
+  mark.innerHTML='<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 10.5 16 5l11 5.5v13L16 29 5 23.5v-13Z" stroke="white" stroke-width="2" stroke-linejoin="round"/><path d="M5.5 11 16 16.5 26.5 11M16 16.5V28" stroke="white" stroke-width="2" stroke-linejoin="round"/><path d="m11 8 11 5.5" stroke="#F7C85A" stroke-width="2.5" stroke-linecap="round"/></svg>';
+ }
+}
+function render(){
+ syncStoreLogo();
+ const q=(document.getElementById("search")?.value||"").trim().toLocaleLowerCase("id");
+ const categoryNames=[...new Set([...categories.map(c=>c.name),...products.map(p=>p.category).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,"id"));
+ const chip=document.getElementById("categoryChips");
+ if(chip)chip.innerHTML=`<button class="category-chip ${selectedCategory==="__recommended"?"active":""}" onclick="selectCategory('__recommended')">⭐ Rekomendasi</button>`+
+ categoryNames.map(c=>`<button class="category-chip ${selectedCategory===c?"active":""}" onclick="selectCategory('${esc(c).replace(/'/g,"\\'")}')">${esc(c)}</button>`).join("");
+ const match=p=>!q||[p.name,p.category,stores.find(s=>s.id===p.store_id)?.name].join(" ").toLocaleLowerCase("id").includes(q);
+ const featured=products.filter(p=>p.is_featured&&match(p));
+ const rec=document.getElementById("recommendations");
+ if(rec)rec.innerHTML=featured.slice(0,4).map(productCard).join("")||'<div class="empty" style="grid-column:1/-1">Belum ada produk rekomendasi. Admin dapat menyematkan produk dari Kelola Produk.</div>';
+ const filtered=products.filter(p=>match(p)&&(!selectedCategory||(selectedCategory==="__recommended"?p.is_featured:p.category===selectedCategory)));
+ let shown=filtered;
+ if(!q&&!selectedCategory)shown=products.filter(match).sort((a,b)=>Number(!!b.is_featured)-Number(!!a.is_featured)).slice(0,4);
+ document.getElementById("productHeading").textContent=q?"Hasil Pencarian":selectedCategory==="__recommended"?"Produk Rekomendasi":selectedCategory?selectedCategory:"Produk Terbaru";
+ const clear=document.getElementById("clearCategory");if(clear)clear.classList.toggle("hidden",!selectedCategory);
+ document.getElementById("products").innerHTML=shown.map(productCard).join("")||'<div class="empty" style="grid-column:1/-1">Tidak ada produk pada kategori ini. Pilih kategori lain atau cari produk.</div>';
+ updateCart();
+}
+function productCard(p){return `<article class="product"><div style="background:#FFF0F0"><img src="${esc(img(p.image_url))}" alt="${esc(p.name)}" onerror="this.style.display='none'" style="width:100%;aspect-ratio:1/1;object-fit:cover"></div><div class="pbody">${p.is_featured?`<span class="pin-badge">⭐ Rekomendasi</span>`:""}<div class="pname">${esc(p.name)}</div><div class="price">${money(p.price)}</div><div class="stock">${Number(p.stock)>0?"Stok tersedia: "+p.stock:"Stok habis"}</div><div class="pactions"><button ${Number(p.stock)<=0?"disabled":""} onclick="addCart('${p.id}')">+ Keranjang</button></div></div></article>`}
+function selectCategory(category){selectedCategory=category;render()}
+function addCart(id){let p=products.find(x=>x.id===id);if(!p)return;let existing=cart.find(x=>x.id===id);if(existing){if(existing.qty>=p.stock)return alert("Jumlah melebihi stok.");existing.qty++}else cart.push({id:p.id,qty:1});updateCart()}
+function updateCart(){let count=cart.reduce((a,x)=>a+x.qty,0),total=cart.reduce((a,x)=>a+x.qty*(products.find(p=>p.id===x.id)?.price||0),0);document.getElementById("cartCount").textContent=count;document.getElementById("floatCount").textContent=count;document.getElementById("floatTotal").textContent=money(total);document.getElementById("cartFloat").classList.toggle("hidden",!count)}
+function openCart(){if(!cart.length)return alert("Keranjang masih kosong.");let rows=cart.map(x=>{let p=products.find(p=>p.id===x.id);return `<div class="row" style="align-items:center;border-bottom:1px solid #eee;padding:10px 0"><div><b>${esc(p.name)}</b><div class="muted">${money(p.price)} · Stok ${p.stock}</div></div><div style="display:flex;align-items:center;gap:7px;justify-content:flex-end"><button class="secondary" onclick="changeQty('${x.id}',-1)">−</button>${x.qty}<button class="secondary" onclick="changeQty('${x.id}',1)">+</button></div></div>`}).join("");let total=cart.reduce((a,x)=>a+x.qty*products.find(p=>p.id===x.id).price,0);showModal(`<h2>Keranjang Belanja</h2>${rows}<h3 style="text-align:right">Total: ${money(total)}</h3><div class="field"><label>Nama pemesan</label><input id="buyerName" placeholder="Nama Anda"></div><div class="field"><label>Alamat pengantaran / catatan</label><textarea id="buyerAddress" rows="2" placeholder="Alamat lengkap atau ambil di toko"></textarea></div><button style="width:100%" onclick="checkout()">Checkout via WhatsApp</button>`)}
+function changeQty(id,d){let x=cart.find(x=>x.id===id),p=products.find(p=>p.id===id);if(!x)return;x.qty+=d;if(x.qty<=0)cart=cart.filter(z=>z.id!==id);if(x&&x.qty>p.stock){x.qty=p.stock;alert("Jumlah dibatasi sesuai stok.")}openCart();updateCart()}
+async function checkout(){
+let name=document.getElementById("buyerName").value.trim(),address=document.getElementById("buyerAddress").value.trim();
+if(!name)return alert("Isi nama pemesan.");
+let storeIds=[...new Set(cart.map(x=>products.find(p=>p.id===x.id).store_id))];
+if(storeIds.length!==1)return alert("Keranjang hanya dapat berisi produk dari satu toko. Kosongkan keranjang untuk memilih toko lain.");
+let store=stores.find(s=>s.id===storeIds[0]);
+if(!store?.whatsapp)return alert("Nomor WhatsApp toko belum diatur.");
+let items=cart.map(x=>({product_id:x.id,quantity:x.qty}));
+let total=cart.reduce((a,x)=>a+x.qty*products.find(p=>p.id===x.id).price,0);
+if(db){
+  let {data,error}=await db.rpc("checkout_order",{p_store_id:store.id,p_customer_name:name,p_customer_address:address,p_items:items});
+  if(error)return alert("Checkout gagal: "+error.message);
+  await loadData();
+}
+let orderLines=cart.map((x,i)=>{
+  let p=products.find(p=>p.id===x.id), unit=Number(p.price)||0, subtotal=unit*x.qty;
+  return `${i+1}. *${p.name}*\n   Jumlah: ${x.qty} x ${money(unit)}\n   Subtotal: *${money(subtotal)}*`;
+}).join("\n\n");
+let msg=[
+  `Halo ${store.name}, saya ingin memesan:`,
+  "",
+  "*DAFTAR PESANAN*",
+  orderLines,
+  "",
+  "------------------------",
+  `*TOTAL BELANJA: ${money(total)}*`,
+  "",
+  "*DATA PEMESAN*",
+  `Nama: ${name}`,
+  `Alamat/Catatan: ${address||"-"}`,
+  "",
+  "Mohon konfirmasi pesanan saya. Terima kasih."
+].join("\n");
+let phone=store.whatsapp.replace(/\D/g,"").replace(/^0/,"62");
+cart=[];closeModal();render();
+window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,"_blank");
+}
+function showModal(html){document.getElementById("modalContent").innerHTML=html;document.getElementById("modal").classList.remove("hidden")}function closeModal(){document.getElementById("modal").classList.add("hidden")}
+function goHome(){document.getElementById("homeView").classList.remove("hidden");document.getElementById("adminView").classList.add("hidden")}
+function showAdmin(){document.getElementById("homeView").classList.add("hidden");document.getElementById("adminView").classList.remove("hidden");updateAdminAuth()}
+async function validateAdminSession(authSession){
+ session=null;
+ if(!authSession||!db)return false;
+ const check=await db.from("admin_users").select("user_id").eq("user_id",authSession.user.id).maybeSingle();
+ if(check.error||!check.data){await db.auth.signOut();return false;}
+ session={...authSession,isAdmin:true};
+ return true;
+}
+function updateAdminAuth(){
+ const loginBox=document.getElementById("adminLogin"),app=document.getElementById("adminApp");
+ loginBox.classList.toggle("hidden",isLoggedIn());app.classList.toggle("hidden",!isLoggedIn());
+ if(!isLoggedIn()){const msg=document.getElementById("loginMsg");if(msg)msg.textContent=configured()?"Gunakan akun Admin terdaftar. Pendaftaran publik tidak tersedia.":"Koneksi Supabase belum dikonfigurasi.";}
+ if(isLoggedIn())renderAdminPage();
+}
+async function login(){
+ const email=document.getElementById("loginEmail").value.trim(),password=document.getElementById("loginPassword").value,msg=document.getElementById("loginMsg");
+ if(!email||!password){msg.textContent="Email dan kata sandi wajib diisi.";return}
+ if(!db){msg.textContent="Supabase belum terhubung.";return}
+ msg.textContent="Memeriksa akun...";
+ const result=await db.auth.signInWithPassword({email,password});
+ if(result.error){msg.textContent="Login gagal. Periksa email dan kata sandi.";return}
+ const valid=await validateAdminSession(result.data.session);
+ if(!valid){msg.textContent="Akun ini belum diberi hak Admin. Hubungi pengelola.";return}
+ document.getElementById("loginPassword").value="";
+ updateAdminAuth();
+}
+async function logout(){if(db)await db.auth.signOut();session=null;updateAdminAuth()}
+
+async function adminTab(){return renderAdminPage()}
+function adminProductRow(p){
+ return `<tr><td>${esc(p.name)}<br><small class="muted">${esc(p.category||"")}</small></td><td>${esc(stores.find(s=>s.id===p.store_id)?.name||"-")}</td><td>${money(p.price)}</td><td>${p.stock}</td><td><button class="secondary" onclick="productForm('${p.id}')">Edit / Ubah Harga</button> <button class="secondary" onclick="toggleFeatured('${p.id}')">${p.is_featured?"Lepas Sematan":"📌 Sematkan"}</button> <button class="danger" onclick="deleteProduct('${p.id}')">Hapus</button></td></tr>`;
+}
+function filterAdminProducts(){
+ const input=document.getElementById("adminProductSearch");
+ const body=document.getElementById("adminProductsBody");
+ if(!input||!body)return;
+ const q=input.value.trim().toLocaleLowerCase("id");
+ const found=products.filter(p=>[p.name||"",p.category||"",String(p.price??""),money(p.price),String(p.stock??"")].join(" ").toLocaleLowerCase("id").includes(q));
+ body.innerHTML=found.map(adminProductRow).join("")||'<tr><td colspan="5">Produk tidak ditemukan.</td></tr>';
+}
+async function renderAdminPage(){
+ if(!isLoggedIn())return;
+ const loadResult=await loadAdminData();
+ const totalStock=products.reduce((a,p)=>a+Number(p.stock),0);
+ document.getElementById("adminContent").innerHTML=`
+ <section class="section"><div class="adminhead"><h2>Dashboard</h2><button class="secondary" onclick="renderAdminPage()">↻ Perbarui</button></div>${loadResult?.ok===false?`<div class="notice" style="border-color:#f3b6b6;background:#fff5f5;color:#9b1c1c">Database belum dapat dibaca: ${esc(loadResult.error?.message||"Periksa konfigurasi aplikasi dan SQL Supabase.")}</div>`:""}
+ <div class="stats"><div class="stat"><span class="muted">Total toko</span><b>${stores.length}</b></div><div class="stat"><span class="muted">Total produk</span><b>${products.length}</b></div><div class="stat"><span class="muted">Total stok</span><b>${totalStock}</b></div><div class="stat"><span class="muted">Pesanan</span><b>${orders.length}</b></div></div>
+ <div class="notice">Stok berkurang otomatis saat checkout berhasil dicatat. Pastikan pesanan WhatsApp dikonfirmasi; pesanan batal perlu proses pengembalian stok.<br><b>Catatan keamanan:</b> Akses perubahan data dibatasi melalui Supabase Auth dan kebijakan RLS khusus akun Admin.</div></section>
+ <section class="section"><div class="adminhead"><h2>Banner Promo</h2><button onclick="bannerForm()">Kelola Banner</button></div><div class="notice">Banner hanya gambar JPG/JPEG, tanpa teks overlay.</div></section><section class="section"><div class="adminhead"><h2>Kelola Toko</h2><button onclick='storeForm(stores[0]?.id||"")'>${stores.length?"Edit Toko":"Buat Toko"}</button></div><div class="tablewrap"><table><thead><tr><th>Nama toko</th><th>WhatsApp</th><th>Alamat</th><th>Aksi</th></tr></thead><tbody>${stores.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.whatsapp)}</td><td>${esc(s.address)}</td><td><button class="secondary" onclick="storeForm('${s.id}')">Edit</button> </td></tr>`).join("")||'<tr><td colspan="4">Belum ada toko.</td></tr>'}</tbody></table></div></section>
+ <section class="section"><div class="adminhead"><h2>Kelola Kategori Produk</h2><button onclick="addCategory()">+ Tambah Kategori</button></div><p class="muted">Kategori akan muncul sebagai pilihan di halaman pengguna. Produk rekomendasi diatur melalui tombol Sematkan pada daftar produk.</p><div class="tablewrap"><table><thead><tr><th>Nama kategori</th><th>Jumlah produk</th><th>Aksi</th></tr></thead><tbody>${categories.map(c=>`<tr><td><b>${esc(c.name)}</b></td><td>${products.filter(p=>p.category===c.name).length}</td><td><button class="danger" onclick="deleteCategory('${c.id}')">Hapus</button></td></tr>`).join("")||'<tr><td colspan="3">Belum ada kategori.</td></tr>'}</tbody></table></div></section>
+ <section class="section"><div class="adminhead"><h2>Kelola Produk</h2><button onclick="productForm()">+ Tambah Produk</button></div>
+ <div class="field"><label for="adminProductSearch">Cari produk untuk cek atau ubah harga</label><input id="adminProductSearch" type="search" placeholder="Ketik nama produk atau kategori..." oninput="filterAdminProducts()"></div>
+ <div class="tablewrap"><table><thead><tr><th>Produk</th><th>Toko</th><th>Harga</th><th>Stok</th><th>Aksi</th></tr></thead><tbody id="adminProductsBody">${products.map(p=>adminProductRow(p)).join("")||'<tr><td colspan="5">Belum ada produk.</td></tr>'}</tbody></table></div></section>
+ <section class="section"><div class="adminhead"><h2>Pesanan</h2><span class="muted">Riwayat terbaru</span></div><div class="tablewrap"><table><thead><tr><th>Tanggal</th><th>Pemesan</th><th>Toko</th><th>Total</th><th>Status</th></tr></thead><tbody>${orders.map(o=>`<tr><td>${new Date(o.created_at).toLocaleString("id-ID")}</td><td>${esc(o.customer_name)}</td><td>${esc(stores.find(s=>s.id===o.store_id)?.name||"-")}</td><td>${money(o.total)}</td><td>${esc(o.status)}</td></tr>`).join("")||'<tr><td colspan="5">Belum ada pesanan.</td></tr>'}</tbody></table></div></section>
+ <section class="section"><div class="adminhead"><h2>Status Database</h2><span class="muted">${db?"Terhubung":"Belum dikonfigurasi"}</span></div>
+ <div class="notice">${db?"Supabase aktif. Data toko dan produk tersimpan online dan dapat diakses dari perangkat lain.":"Supabase belum dikonfigurasi. Koneksi dipasang satu kali pada file aplikasi sebelum diunggah ke GitHub. Anda tidak perlu memasukkan URL atau key dari halaman Admin."}</div>
+ <p class="muted">Pengaturan database dilakukan melalui konfigurasi aplikasi. Halaman Admin difokuskan untuk mengelola toko, logo, WhatsApp, produk, harga, banner, dan pesanan.</p>
+ </section><section class="section"><div class="notice">Keamanan Admin menggunakan Supabase Auth. Kelola kata sandi melalui pengaturan akun Supabase; jangan bagikan akun Admin kepada pelanggan.</div>`;
+}
+async function dashboard(){return renderAdminPage()}
+async function loadAdminData(){
+ const result=await loadData();
+ if(!result.ok) return result;
+ if(db){
+  const r=await db.from("orders").select("*").order("created_at",{ascending:false}).limit(100);
+  if(r.error) return {ok:false,error:r.error};
+  orders=r.data||[];
+ } else {
+  orders=[];
+ }
+ return {ok:true};
+}
+async function storeAdmin(){return renderAdminPage()}
+async function productAdmin(){return renderAdminPage()}
+async function orderAdmin(){return renderAdminPage()}
+function storeForm(id){
+ let st=stores.find(x=>x.id===id)||stores[0]||{};
+ if(stores.length>0 && !id) id=stores[0].id;
+ showModal(`<h2>${st.id?"Edit Toko":"Buat Toko"}</h2>
+ <div class="notice">Bariklana hanya menggunakan <b>1 toko</b>. Toko tidak dapat ditambah menjadi toko kedua.</div>
+ <div class="field"><label>Nama toko</label><input id="sName" value="${esc(st.name||"")}"></div>
+ <div class="field"><label>Nomor WhatsApp</label><input id="sWa" value="${esc(st.whatsapp||"")}"></div>
+ <div class="field"><label>Alamat toko</label><textarea id="sAddress">${esc(st.address||"")}</textarea></div>
+ <div class="field"><label>Logo toko — pilih gambar dari galeri HP (JPG/PNG/WEBP)</label><input id="sImage" type="file" accept="image/*,.jpg,.jpeg,.png,.webp"></div>
+ <div class="field">${st.image_url?`<img src="${esc(st.image_url)}" alt="Logo toko saat ini" style="width:92px;height:92px;object-fit:contain;border:1px solid #e5ecf5;border-radius:14px;padding:6px;background:#fff">`:""}<small class="muted">${st.image_url?"Logo saat ini. Pilih gambar baru dari galeri jika ingin menggantinya.":"Belum ada logo toko. Pilih gambar dari galeri HP."}</small></div>
+ <div class="field"><label>Deskripsi</label><input id="sDesc" value="${esc(st.description||"")}"></div>
+ <button onclick="saveStore('${id||""}')">Simpan Toko</button>`)
+}
+async function saveStore(id){
+ try{
+  if(!db) return alert("Supabase belum dikonfigurasi. Isi Project URL dan anon/publishable key pada konfigurasi aplikasi sebelum upload ke GitHub.");
+  await loadData();
+  const current=id?stores.find(x=>x.id===id):stores[0];
+  if(current) id=current.id;
+  const file=document.getElementById("sImage")?.files?.[0];
+  let image=current?.image_url||"";
+  if(file) image=await fileToJpeg(file,900,.78);
+  const v={
+   name:document.getElementById("sName").value.trim(),
+   whatsapp:document.getElementById("sWa").value.trim(),
+   address:document.getElementById("sAddress").value.trim(),
+   image_url:image,
+   description:document.getElementById("sDesc").value.trim(),
+   is_active:true
+  };
+  if(!v.name||!v.whatsapp||!v.address) return alert("Nama toko, WhatsApp, dan alamat wajib diisi.");
+  let r;
+  if(id){
+   r=await db.from("stores").update(v).eq("id",id).select("*").single();
+  }else{
+   r=await db.from("stores").insert(v).select("*").single();
+  }
+  if(r.error) throw r.error;
+  closeModal();
+  await loadData();
+  await renderAdminPage();
+  render();
+  alert("Data toko berhasil disimpan.");
+ }catch(e){
+  console.error(e);
+  alert("Gagal menyimpan toko: "+(e?.message||e));
+ }
+}
+async function deleteStore(){
+ alert("Bariklana hanya memiliki satu toko. Toko utama tidak dapat dihapus.")
+}
+async function productAdmin(){
+ await loadAdminData();
+ const onlyStore=stores[0];
+ document.getElementById("adminContent").innerHTML=`<div class="adminhead"><h2>Kelola Produk</h2>${onlyStore?'<button onclick="productForm()">+ Tambah Produk</button>':'<button onclick="storeForm()">Buat Toko</button>'}</div>
+ ${onlyStore?"":'<div class="notice">Buat 1 toko terlebih dahulu sebelum menambahkan produk.</div>'}
+ <div class="tablewrap"><table><thead><tr><th>Produk</th><th>Toko</th><th>Harga</th><th>Stok</th><th>Aksi</th></tr></thead><tbody>${products.map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(onlyStore?.name||"-")}</td><td>${money(p.price)}</td><td>${p.stock}</td><td><button class="secondary" onclick="productForm('${p.id}')">Edit</button> <button class="secondary" onclick="toggleFeatured('${p.id}')">${p.is_featured?"Lepas Sematan":"📌 Sematkan"}</button> <button class="danger" onclick="deleteProduct('${p.id}')">Hapus</button></td></tr>`).join("")||'<tr><td colspan="5">Belum ada produk.</td></tr>'}</tbody></table></div>`
+}
+async function productAdmin(){await loadAdminData();document.getElementById("adminContent").innerHTML=`<div class="adminhead"><h2>Kelola Produk</h2><button onclick="productForm()">+ Tambah Produk</button></div><div class="tablewrap"><table><thead><tr><th>Produk</th><th>Toko</th><th>Harga</th><th>Stok</th><th>Aksi</th></tr></thead><tbody>${products.map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(stores.find(s=>s.id===p.store_id)?.name||"-")}</td><td>${money(p.price)}</td><td>${p.stock}</td><td><button class="secondary" onclick="productForm('${p.id}')">Edit</button> <button class="secondary" onclick="toggleFeatured('${p.id}')">${p.is_featured?"Lepas Sematan":"📌 Sematkan"}</button> <button class="danger" onclick="deleteProduct('${p.id}')">Hapus</button></td></tr>`).join("")}</tbody></table></div>`}
+async function addCategory(){
+ const name=prompt("Nama kategori produk:");if(!name||!name.trim())return;
+ if(!db)return alert("Supabase belum dikonfigurasi.");
+ const clean=name.trim();
+ if(categories.some(c=>c.name.toLocaleLowerCase("id")===clean.toLocaleLowerCase("id")))return alert("Kategori sudah ada.");
+ const r=await db.from("categories").insert({name:clean,is_active:true}).select("*").single();
+ if(r.error)return alert("Gagal menambah kategori: "+r.error.message);
+ await loadData();await renderAdminPage();render();
+}
+async function deleteCategory(id){
+ const c=categories.find(x=>x.id===id);if(!c)return;
+ if(products.some(p=>p.category===c.name))return alert("Kategori masih digunakan produk. Ubah kategori produk terlebih dahulu.");
+ if(!confirm("Hapus kategori "+c.name+"?"))return;
+ const r=await db.from("categories").update({is_active:false}).eq("id",id);
+ if(r.error)return alert("Gagal menghapus kategori: "+r.error.message);
+ await loadData();await renderAdminPage();render();
+}
+function productForm(id){
+ let p=products.find(x=>x.id===id)||{},st=stores[0];
+ if(!st)return alert("Buat 1 toko terlebih dahulu.");
+ showModal(`<h2>${id?"Edit":"Tambah"} Produk</h2>
+ <div class="notice">Produk otomatis masuk ke toko <b>${esc(st.name)}</b>. Hanya ada 1 toko.</div>
+ <div class="field"><label>Nama produk</label><input id="pName" value="${esc(p.name||"")}"></div>
+ <div class="row"><div class="field"><label>Harga (Rp)</label><input id="pPrice" type="number" min="0" value="${p.price??""}"></div>
+ <div class="field"><label>Stok</label><input id="pStock" type="number" min="0" value="${p.stock??0}"></div></div>
+ <div class="row"><div class="field"><label>Kategori</label><select id="pCategory"><option value="">Pilih kategori</option>${categories.map(c=>`<option value="${esc(c.name)}" ${p.category===c.name?"selected":""}>${esc(c.name)}</option>`).join("")}${p.category&&!categories.some(c=>c.name===p.category)?`<option selected value="${esc(p.category)}">${esc(p.category)}</option>`:""}</select></div>
+ <div class="field"><label>Foto produk — pilih gambar dari galeri HP (JPG/PNG/WEBP)</label><input id="pImage" type="file" accept="image/*,.jpg,.jpeg,.png,.webp"></div></div>
+ <div class="field"><small class="muted">${p.image_url?"Foto tersimpan. Pilih gambar baru jika ingin mengganti.":"Belum ada foto produk."}</small></div>
+ <button onclick="saveProduct('${id||""}')">Simpan Produk</button>`)
+}
+async function saveProduct(id){
+ try{
+  if(!db) return alert("Supabase belum dikonfigurasi. Isi Project URL dan anon/publishable key pada konfigurasi aplikasi sebelum upload ke GitHub.");
+  await loadData();
+  const st=stores[0];
+  if(!st) return alert("Buat 1 toko terlebih dahulu pada Kelola Toko.");
+  const current=id?products.find(x=>x.id===id):null;
+  const file=document.getElementById("pImage")?.files?.[0];
+  let image=current?.image_url||"";
+  if(file) image=await fileToJpeg(file,1000,.78);
+  const v={
+   store_id:st.id,
+   name:document.getElementById("pName").value.trim(),
+   price:Number(document.getElementById("pPrice").value),
+   stock:Number(document.getElementById("pStock").value),
+   category:document.getElementById("pCategory").value.trim(),
+   image_url:image,
+   is_active:true
+  };
+  if(!v.name||!Number.isFinite(v.price)||v.price<0||!Number.isInteger(v.stock)||v.stock<0) return alert("Lengkapi data produk dengan benar.");
+  let r;
+  if(id){
+   r=await db.from("products").update(v).eq("id",id).select("*").single();
+  }else{
+   r=await db.from("products").insert(v).select("*").single();
+  }
+  if(r.error) throw r.error;
+  closeModal();
+  await loadData();
+  await renderAdminPage();
+  render();
+  alert("Produk berhasil disimpan.");
+ }catch(e){
+  console.error(e);
+  alert("Gagal menyimpan produk: "+(e?.message||e));
+ }
+}
+function bannerForm(){
+ showModal(`<h2>Kelola Banner</h2><p class="muted">Upload sampai 3 gambar dari galeri (JPG/PNG/WEBP). Banner hanya menampilkan gambar tanpa teks tambahan.</p>
+ <div class="field"><label>Banner 1</label><input id="b1" type="file" accept=".jpg,.jpeg,image/jpeg"></div>
+ <div class="field"><label>Banner 2</label><input id="b2" type="file" accept=".jpg,.jpeg,image/jpeg"></div>
+ <div class="field"><label>Banner 3</label><input id="b3" type="file" accept=".jpg,.jpeg,image/jpeg"></div>
+ <div class="row"><button onclick="saveBannerImages()">Simpan Banner</button><button class="danger" onclick="deleteAllBanners()">Hapus Semua</button></div>`)
+}
+async function saveBannerImages(){
+ const files=[document.getElementById("b1").files[0],document.getElementById("b2").files[0],document.getElementById("b3").files[0]];
+ try{
+  if(!db) throw new Error("Supabase belum terhubung. Banner tidak dapat dibagikan ke perangkat lain.");
+  let out=[];
+  for(let i=0;i<3;i++) out[i]=files[i]?await fileToJpeg(files[i],1600,.82):(banners[i]||"");
+  out=out.filter(Boolean).slice(0,3);
+  const rows=out.map((image_url,i)=>({slot:i+1,image_url}));
+  const saved=rows.length?await db.from("banners").upsert(rows,{onConflict:"slot"}):{error:null};
+  if(saved.error) throw new Error("Gagal menyimpan banner bersama. Pastikan SQL terbaru sudah dijalankan di Supabase. "+saved.error.message);
+  const slots=out.map((_,i)=>i+1);
+  const removed=await db.from("banners").delete().not("slot","in",`(${slots.length?slots.join(","):"0"})`);
+  if(removed.error) throw new Error("Banner tersimpan, tetapi pembersihan banner lama gagal: "+removed.error.message);
+  banners=out;saveBanners();renderBanners();closeModal();
+  alert("Banner berhasil disimpan ke Supabase dan akan tampil untuk semua pengguna yang membuka link katalog.");
+ }catch(e){alert(e.message)}
+}
+async function deleteAllBanners(){
+ if(!db)return alert("Supabase belum terhubung.");
+ if(!confirm("Hapus semua banner untuk seluruh pengguna?"))return;
+ const r=await db.from("banners").delete().gte("slot",1);
+ if(r.error)return alert("Gagal menghapus banner: "+r.error.message);
+ banners=[];saveBanners();renderBanners();closeModal();
+ alert("Semua banner sudah dihapus untuk seluruh pengguna.");
+}
+
+async function toggleFeatured(id){
+ const p=products.find(x=>x.id===id);if(!p)return;
+ const next=!p.is_featured;
+ const r=await db.from("products").update({is_featured:next}).eq("id",id);
+ if(r.error){alert("Gagal mengubah sematan produk: "+r.error.message);return}
+ p.is_featured=next;
+ await loadData();render();await renderAdminPage();
+}
+async function deleteProduct(id){if(!confirm("Hapus produk ini?"))return;let r=await db.from("products").update({is_active:false}).eq("id",id);if(r.error)alert(r.error.message);await renderAdminPage();await loadData();render()}
+async function orderAdmin(){await loadAdminData();document.getElementById("adminContent").innerHTML=`<div class="adminhead"><h2>Pesanan</h2><button class="secondary" onclick="orderAdmin()">Muat ulang</button></div><div class="tablewrap"><table><thead><tr><th>Tanggal</th><th>Pemesan</th><th>Toko</th><th>Total</th><th>Status</th></tr></thead><tbody>${orders.map(o=>`<tr><td>${new Date(o.created_at).toLocaleString("id-ID")}</td><td>${esc(o.customer_name)}</td><td>${esc(stores.find(s=>s.id===o.store_id)?.name||"-")}</td><td>${money(o.total)}</td><td>${esc(o.status)}</td></tr>`).join("")||"<tr><td colspan=5>Belum ada pesanan.</td></tr>"}</tbody></table></div>`}
+init();
+</script>
+</body></html>
